@@ -3,6 +3,8 @@ import { Github, Linkedin, Mail, MapPin, Download } from 'lucide-react';
 import { Button } from './ui/button';
 import { portfolioData } from '../mockData';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
 const Hero = () => {
   const { personal } = portfolioData;
   const titleRef = useRef(null);
@@ -27,8 +29,7 @@ const Hero = () => {
   }, []);
 
   const handleDownloadCV = () => {
-    // Mock function - will be implemented with backend
-    alert('Fonctionnalité de téléchargement du CV à venir!');
+    window.open(`${BACKEND_URL}/api/download-cv`, '_blank');
   };
 
   return (
