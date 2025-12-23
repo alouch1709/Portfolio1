@@ -70,6 +70,58 @@ async def get_status_checks():
     
     return status_checks
 
+# Contact form endpoint
+@api_router.post("/contact", response_model=ContactResponse)
+async def submit_contact(contact: ContactMessage):
+    try:
+        # Create DB model with timestamp and read status
+        contact_db = ContactMessageDB(**contact.dict())
+        
+        # Insert into MongoDB
+        result = await db.contact_messages.insert_one(contact_db.dict())
+        
+        return ContactResponse(
+            success=True,
+            message="Message envoyé avec succès",
+            id=str(result.inserted_id)
+        )
+    except Exception as e:
+        logging.error(f"Error saving contact message: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erreur lors de l'envoi du message")
+
+# Download CV endpoint
+@api_router.get("/download-cv")
+async def download_cv():
+    try:
+        # Generate PDF
+        cv_generator = CVGenerator()
+        pdf_buffer = cv_generator.generate()
+        
+        # Return as streaming response
+        return StreamingResponse(
+            pdf_buffer,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": "attachment; filename=CV_Ali_Mansouri.pdf"
+            }
+        )
+    except Exception as e:
+        logging.error(f"Error generating CV PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erreur lors de la génération du PDF")
+
+# Get all contact messages (admin endpoint)
+@api_router.get("/contact-messages")
+async def get_contact_messages():
+    try:
+        messages = await db.contact_messages.find().sort("created_at", -1).to_list(100)
+        # Convert ObjectId to string for JSON serialization
+        for msg in messages:
+            msg['_id'] = str(msg['_id'])
+        return messages
+    except Exception as e:
+        logging.error(f"Error fetching contact messages: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erreur lors de la récupération des messages")
+
 # Include the router in the main app
 app.include_router(api_router)
 
