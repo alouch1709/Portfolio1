@@ -28,8 +28,22 @@ const Hero = () => {
     return () => observer.disconnect();
   }, []);
 
-  const handleDownloadCV = () => {
-    window.open(`${BACKEND_URL}/api/download-cv`, '_blank');
+  const handleDownloadCV = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/download-cv`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'CV_Ali_Mansouri.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erreur lors du téléchargement du CV:', error);
+      alert('Erreur lors du téléchargement du CV');
+    }
   };
 
   return (
