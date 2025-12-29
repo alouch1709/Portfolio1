@@ -93,11 +93,20 @@ async def submit_contact(contact: ContactMessage):
 @api_router.get("/download-cv")
 async def download_cv():
     try:
-        # Generate PDF
-        cv_generator = CVGenerator()
-        pdf_buffer = cv_generator.generate()
+        # Path to the CV PDF file
+        cv_path = ROOT_DIR / "CV_Ali_Mansouri.pdf"
+        
+        if not cv_path.exists():
+            raise HTTPException(status_code=404, detail="CV non trouvé")
+        
+        # Read the PDF file
+        with open(cv_path, "rb") as pdf_file:
+            pdf_content = pdf_file.read()
         
         # Return as streaming response
+        from io import BytesIO
+        pdf_buffer = BytesIO(pdf_content)
+        
         return StreamingResponse(
             pdf_buffer,
             media_type="application/pdf",
@@ -106,8 +115,8 @@ async def download_cv():
             }
         )
     except Exception as e:
-        logging.error(f"Error generating CV PDF: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erreur lors de la génération du PDF")
+        logging.error(f"Error serving CV PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erreur lors du téléchargement du PDF")
 
 # Get all contact messages (admin endpoint)
 @api_router.get("/contact-messages")
